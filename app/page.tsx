@@ -1,95 +1,117 @@
+'use client'
 import Image from "next/image";
 import styles from "./page.module.css";
+import { DocumentCard, Dropdown, Panel, PrimaryButton, SearchBox, Spinner, SpinnerSize, Stack } from "@fluentui/react";
+import { useLaunches } from "./hooks/useLaunches";
+import RocketItem from "./components/RocketItem";
+import { useEffect, useRef, useState } from "react";
+import LaunchDetails from "./components/LaunchDetails";
 
 export default function Home() {
+
+  const [launchesList, nextPage, hasMore, searchLaunchByName] = useLaunches()
+  const loader = useRef(null);
+  const [isOpen, setPanel] = useState(false);
+  const [launchId, setlaunchId] = useState('');
+
+  const dismissPanel = () => {
+    setPanel(false)
+  }
+
+  useEffect(() => {
+    if (!loader.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          nextPage()
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    observer.observe(loader.current);
+
+    return () => {
+      if (loader.current) observer.unobserve(loader.current);
+    };
+  }, [hasMore]);
+
+  const onLaunchClick = (id) => {
+    setlaunchId(id)
+    setPanel(true)
+  }
+
+  const OnSearch = (searchText) => {
+    console.log('OnSearch', searchText)
+    debounce(searchLaunchByName(searchText), 500)
+  }
+
+
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      <nav>
+        <h2>Launches Explorer</h2>
+        <Stack horizontal horizontalAlign="space-between">
+          <Stack.Item>
+            <SearchBox placeholder="Search" onChange={OnSearch} />
+          </Stack.Item>
+          <Stack.Item>
+            <Dropdown
+              placeholder="Select Rockets..."
+              // selectedKeys={selectedKeys}
+              // // eslint-disable-next-line react/jsx-no-bind
+              onChange={() => { }}
+              multiSelect
+              options={[]}
+            // styles={dropdownStyles}
             />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          </Stack.Item>
+          <Stack.Item>
+            <PrimaryButton text="Reset" onClick={() => { }} />
+          </Stack.Item>
+        </Stack>
+      </nav>
+
+      <section>
+        <Stack wrap
+          horizontal
+          horizontalAlign="center"
+          tokens={{ childrenGap: 20 }}
+          styles={{ root: { width: "100%", maxWidth: 700 } }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+          {
+            launchesList && launchesList?.map(rocket => {
+              return (
+                <Stack.Item onClick={() => onLaunchClick(rocket.id)}>
+                  <RocketItem {...rocket} />
+                </Stack.Item>
+              )
+            })
+          }
+        </Stack>
+        {hasMore ? <div ref={loader}><Spinner size={SpinnerSize.large} /></div> : <p>No more launches</p>}
+      </section>
+
+      <Panel
+        headerText="Sample panel"
+        isOpen={isOpen}
+        isLightDismiss={true}
+        onDismiss={dismissPanel}
+        // You MUST provide this prop! Otherwise screen readers will just say "button" with no label.
+        closeButtonAriaLabel="Close"
+      >
+       {launchId && <LaunchDetails launchId={launchId} />}
+      </Panel>
     </div>
   );
+}
+
+function debounce(func, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(this, args), delay);
+  };
 }
