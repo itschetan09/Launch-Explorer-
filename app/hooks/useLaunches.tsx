@@ -6,6 +6,7 @@ export const useLaunches = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [listofYears, setYearsList] = useState([])
+  const [rocketsList, setrocketsList] = useState([])
   //   const loader = useRef(null);
 
   const fetchLaunches = async () => {
@@ -62,10 +63,28 @@ export const useLaunches = () => {
     }
   }
 
+  const getRockets =  async () => {
+    try {
+      const res = await fetch("https://api.spacexdata.com/v4/rockets", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      console.log('RocketsDetails', data)
+      setrocketsList(data);
+    } catch (error) {
+      console.log('Error', error)
+    }
+  }
 
   useEffect(() => {
     fetchLaunches()
   }, [page])
+
+  useEffect(() => {
+    getRockets()
+  }, [])
+  
 
 
   const nextPage = () => {
@@ -75,5 +94,5 @@ export const useLaunches = () => {
   }
 
 
-  return [launchesList, nextPage, hasMore, listofYears, searchLaunchByName];
+  return [launchesList, nextPage, hasMore, listofYears, searchLaunchByName, rocketsList];
 }
