@@ -1,4 +1,6 @@
+'use client'
 import { useEffect, useState } from "react"
+import { LaunchDetailsType } from "../services/LaunchDetails";
 
 export const useLaunches = () => {
   const [launchesList, setlaunchesList] = useState([] as any);
@@ -77,6 +79,54 @@ export const useLaunches = () => {
     }
   }
 
+  const fetchLaunchByID = async (launch_id: String) => {
+    try {
+      const res = await fetch(`https://api.spacexdata.com/v5/launches/${launch_id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      let data: LaunchDetailsType = await res.json();
+
+      const [launchPad, rocketDetails]: any = await Promise.all([
+        fetchLaunchPadByID(data.launchpad),
+        getRocketbyId(data.rocket)
+      ])
+      data = {...data, rocket: rocketDetails, launchpad: launchPad}
+      return data;
+    } catch (error) {
+      console.log('Error', error)
+    }
+  }
+
+  const fetchLaunchPadByID = async (launch_pad_id: String) => {
+    try {
+      const res = await fetch(`https://api.spacexdata.com/v4/launchpads/${launch_pad_id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log('Error', error)
+    }
+  }
+
+  const getRocketbyId =  async (rocket_id: String) => {
+    try {
+      const res = await fetch(`https://api.spacexdata.com/v4/rockets/${rocket_id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      console.log('RocketsDetails', data)
+      return data
+    } catch (error) {
+      console.log('Error', error)
+    }
+  }
+
   useEffect(() => {
     fetchLaunches()
   }, [page])
@@ -94,5 +144,5 @@ export const useLaunches = () => {
   }
 
 
-  return [launchesList, nextPage, hasMore, listofYears, searchLaunchByName, rocketsList];
+  return {launchesList, nextPage, hasMore, listofYears, searchLaunchByName, rocketsList, fetchLaunchByID};
 }

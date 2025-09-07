@@ -1,4 +1,6 @@
+'use client'
 import { Body1, Caption1, Card, CardFooter, CardHeader, CardPreview, makeStyles, MessageBar, MessageBarBody, MessageBarTitle, tokens } from '@fluentui/react-components';
+import { useRouter } from 'next/navigation';
 
 
 const useStyles = makeStyles({
@@ -34,14 +36,18 @@ const useStyles = makeStyles({
 
 
 function RocketItem(props) {
-  const { name, details, links, date_utc, upcoming, success } = props
+  const { name, details, links, date_utc, upcoming, success, id } = props
   const styles = useStyles();
+  const router = useRouter()
 
+  const onActionCardClick = () => {
+    router.push("launches/"+id)
+  }
 
   return (
     <Card
       className={styles.card}
-      // onClick={onActionCardClick}
+      onClick={onActionCardClick}
     >
       <CardPreview style={{ height: 300, width: 'auto' }}>
         <img
@@ -77,7 +83,7 @@ function RocketItem(props) {
       <CardFooter>
         <MessageBar intent={upcoming ? 'info' : success ? 'success' : 'error'} style={{width: '100%'}}>
           <MessageBarBody>
-            <MessageBarTitle>Launch: {upcoming ? 'Upcoming' : success ? 'Success' : 'Failed!'}</MessageBarTitle>
+            <MessageBarTitle>Mission Status: {upcoming ? 'Upcoming' : success ? 'Successful!' : 'Failed!'}</MessageBarTitle>
           </MessageBarBody>
         </MessageBar>
       </CardFooter>

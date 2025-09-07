@@ -1,3 +1,5 @@
+'use client'
+
 import { useLaunches } from '@/app/hooks/useLaunches';
 import { RocketType } from '@/app/services/rocket';
 import { Dropdown, Option } from '@fluentui/react-components'
@@ -14,6 +16,7 @@ function RocketsDropdown() {
                 headers: { "Content-Type": "application/json" }
             });
             const data = await res.json();
+            console.log('DATA==', data)
             if (data && data?.length) {
                 setRockets(prevR => [...prevR, ...data]);
             }
